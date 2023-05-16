@@ -72,6 +72,13 @@ const flappyBird = {
     altura: 24,
     x: 10,
     y: 50,
+    gravidade: 0.25,
+    velociade: 0,
+    atualiza(){
+        flappyBird.velociade = flappyBird.velociade + flappyBird.gravidade;
+        console.log(flappyBird.velociade);
+        flappyBird.y = flappyBird.y + 1;
+    },
     desenha(){
         contexto.drawImage(
             sprites,
@@ -79,13 +86,13 @@ const flappyBird = {
             flappyBird.largura, flappyBird.altura, // Tamanho do recorte na Sprite
             flappyBird.x, flappyBird.y,
             flappyBird.largura, flappyBird.altura,
-        );
-        
+        );        
     },
 };
 
 
 function loop(){
+    flappyBird.atualiza();
     planoDeFundo.desenha();
     chao.desenha();
     flappyBird.desenha();
