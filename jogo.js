@@ -76,8 +76,7 @@ const flappyBird = {
     velociade: 0,
     atualiza(){
         flappyBird.velociade = flappyBird.velociade + flappyBird.gravidade;
-        console.log(flappyBird.velociade);
-        flappyBird.y = flappyBird.y + 1;
+        flappyBird.y = flappyBird.y + flappyBird.velociade;
     },
     desenha(){
         contexto.drawImage(
