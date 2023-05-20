@@ -185,16 +185,114 @@ function mudarParaTela(novaTela){
     }
 };
 
+function criaCanos(){
+    const canos = {
+        largura: 52,
+        altura: 400,
+        chao: {
+            spriteX: 0,
+            spriteY: 169.
+        },
+        ceu: {
+            spriteX: 52,
+            spriteY: 169,
+        },
+        espaco: 80,
+        desenha(){
+
+            canos.pares.forEach(function(par){
+                const yRandom = par.y;
+                const espacamentoEntreCanos = 90;
+
+                const canoCeuX = par.x;
+                const canoCeuY = yRandom;
+                //[Canos do Céu]
+                contexto.drawImage(
+                    sprites,
+                    canos.ceu.spriteX, canos.ceu.spriteY,
+                    canos.largura, canos.altura,
+                    canoCeuX, canoCeuY,
+                    canos.largura, canos.altura
+                )
+
+                //[Canos do chao]
+                const canoChaoX = par.x;
+                const canoChaoY = canos.altura + espacamentoEntreCanos + yRandom;
+                contexto.drawImage(
+                    sprites,
+                    canos.chao.spriteX, canos.chao.spriteY,
+                    canos.largura, canos.altura,
+                    canoChaoX, canoChaoY,
+                    canos.largura, canos.altura,
+                )
+
+                par.canoCeu = {
+                    x: canoCeuX,
+                    y: canos.altura + canoCeuY
+                }
+                par.canoChao = {
+                    x: canoCeuX,
+                    y: canoCeuY
+                }
+            })
+            
+        },
+        
+        temColisaoComOFlappyBird(par){
+            const cabecaDoFlappy = globais.flappyBird.y;
+            const peDoFlappy = globais.flappyBird.y + globais.flappyBird.altura;
+
+            if(globais.flappyBird.x >= par.x){
+                //console.log('Flappy bird invadiu a area dos Canos')
+
+                if(cabecaDoFlappy <= par.canoCeu.y){
+                    return true;
+                }
+
+                if(peDoFlappy >= par.canoChao.y){
+                    return true;
+                }
+            }
+            return false;
+        },
+        pares: [],
+        atualiza(){
+            const passou100Frames = frames % 100 === 0;
+            if(passou100Frames){
+                console.log('Passou 100 frames')
+                canos.pares.push({
+                        x: canvas.width,
+                        y: -150 * (Math.random() + 1),
+                });
+            }
+
+            canos.pares.forEach(function(par){
+                par.x = par.x - 2;
+
+                if(canos.temColisaoComOFlappyBird(par)){
+                    console.log('Você perdeu!')
+                    mudarParaTela(Telas.INICIO);
+                }
+
+                if(par.x + canos.largura <= 0){
+                    canos.pares.shift();
+                }
+            });
+        },
+    }
+    return canos;
+}
 const Telas = {
     INICIO: {
         inicializa(){
             globais.flappyBird = criaFlappyBird();
             globais.chao = criaChao();
+            globais.canos = criaCanos();
         },
         desenha(){
             planoDeFundo.desenha();
-            globais.chao.desenha();
             globais.flappyBird.desenha();
+            globais.chao.desenha();
             mensagemGetReady.desenha();
         },
         click(){
@@ -209,6 +307,7 @@ const Telas = {
 Telas.JOGO = {
     desenha(){
         planoDeFundo.desenha();
+        globais.canos.desenha();
         globais.chao.desenha();
         globais.flappyBird.desenha();
     },
@@ -216,6 +315,8 @@ Telas.JOGO = {
         globais.flappyBird.pula();
     },
     atualiza(){
+        globais.canos.atualiza();
+        globais.chao.atualiza();
         globais.flappyBird.atualiza();
     }
 }
