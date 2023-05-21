@@ -109,10 +109,7 @@ function criaFlappyBird(){
             if(fazColisao(flappyBird, globais.chao)){
                 som_HIT.play();
 
-                setTimeout(() => {
-                    mudarParaTela(Telas.INICIO);
-                }, 500);
-                
+                    mudarParaTela(Telas.GAMER_OVER);           
                 return;
             }
     
@@ -128,15 +125,12 @@ function criaFlappyBird(){
         frameAtual: 0,
         atualizaOFrameAtual(){
             const intervaloDeFrames = 10;
-            const passouOIntervalo = frames % intervaloDeFrames;
+            const passouOIntervalo = frames % intervaloDeFrames === 0;
 
-            if(passouOIntervalo == 0){
+            if(passouOIntervalo){
                 const baseDoIncremento = 1;
                 const incremento = baseDoIncremento + flappyBird.frameAtual;
                 const baseRepeticao = flappyBird.movimentos.length;
-                //console.log('[incremento]', incremento);
-                //console.log('[baseRepeticao]', baseRepeticao);
-                //console.log('[frame]', incremento % baseRepeticao);
                 flappyBird.frameAtual = incremento % baseRepeticao;
             }
             
@@ -156,7 +150,7 @@ function criaFlappyBird(){
     };
     return flappyBird;
 };
-// Flappy bird
+// [mensagemGetReady]
 const mensagemGetReady = {
     sX: 134,
     sY: 0,
@@ -175,16 +169,25 @@ const mensagemGetReady = {
     }
 }
 
-const globais = {};
-let telasAtiva = {};
-function mudarParaTela(novaTela){
-    telasAtiva = novaTela;
-
-    if(telasAtiva.inicializa){
-        telasAtiva.inicializa();
+// [MessagemGamerOver]
+const MessagemGamerOver = {
+    sX: 134,
+    sY: 153,
+    w: 226,
+    h: 200,
+    x:(canvas.width / 2) - 200 / 2,
+    y: 50,
+    desenha(){
+        contexto.drawImage(
+            sprites,
+            MessagemGamerOver.sX, MessagemGamerOver.sY,
+            MessagemGamerOver.w, MessagemGamerOver.h,
+            MessagemGamerOver.x, MessagemGamerOver.y,
+            MessagemGamerOver.w, MessagemGamerOver.h
+        );
     }
-};
-
+}
+//[Canos]
 function criaCanos(){
     const canos = {
         largura: 52,
@@ -202,7 +205,7 @@ function criaCanos(){
 
             canos.pares.forEach(function(par){
                 const yRandom = par.y;
-                const espacamentoEntreCanos = 90;
+                const espacamentoEntreCanos = 200;
 
                 const canoCeuX = par.x;
                 const canoCeuY = yRandom;
@@ -242,9 +245,7 @@ function criaCanos(){
             const cabecaDoFlappy = globais.flappyBird.y;
             const peDoFlappy = globais.flappyBird.y + globais.flappyBird.altura;
 
-            if(globais.flappyBird.x >= par.x){
-                //console.log('Flappy bird invadiu a area dos Canos')
-
+            if((globais.flappyBird.x + globais.flappyBird.largura) >= par.x){
                 if(cabecaDoFlappy <= par.canoCeu.y){
                     return true;
                 }
@@ -259,7 +260,6 @@ function criaCanos(){
         atualiza(){
             const passou100Frames = frames % 100 === 0;
             if(passou100Frames){
-                console.log('Passou 100 frames')
                 canos.pares.push({
                         x: canvas.width,
                         y: -150 * (Math.random() + 1),
@@ -270,8 +270,8 @@ function criaCanos(){
                 par.x = par.x - 2;
 
                 if(canos.temColisaoComOFlappyBird(par)){
-                    console.log('Você perdeu!')
-                    mudarParaTela(Telas.INICIO);
+                    som_HIT.play();
+                    mudarParaTela(Telas.GAMER_OVER);
                 }
 
                 if(par.x + canos.largura <= 0){
@@ -282,6 +282,40 @@ function criaCanos(){
     }
     return canos;
 }
+
+function criaPlacar(){
+    const placar = {
+        pontuacao: 0,
+        desenha(){
+            contexto.font = '35px "VT323"';
+            contexto.textAlign = 'right';
+            contexto.fillStyle = 'white';
+            contexto.fillText(`Hello word ${placar.pontuacao}`, canvas.width - 10, 35);
+            placar.pontuacao
+        },
+        atualiza(){
+            const intervaloDeFrames = 20;
+            const passouOIntervalo = frames % intervaloDeFrames === 0;
+
+            if(passouOIntervalo){
+                placar.pontuacao = placar.pontuacao + 1;
+            }
+        }
+    }
+    return placar;
+};
+
+//[Telas]
+const globais = {};
+let telasAtiva = {};
+function mudarParaTela(novaTela){
+    telasAtiva = novaTela;
+
+    if(telasAtiva.inicializa){
+        telasAtiva.inicializa();
+    }
+};
+
 const Telas = {
     INICIO: {
         inicializa(){
@@ -305,11 +339,15 @@ const Telas = {
 };
 
 Telas.JOGO = {
+    inicializa(){
+        globais.placar = criaPlacar();
+    },
     desenha(){
         planoDeFundo.desenha();
         globais.canos.desenha();
         globais.chao.desenha();
         globais.flappyBird.desenha();
+        globais.placar.desenha();
     },
     click(){
         globais.flappyBird.pula();
@@ -318,8 +356,21 @@ Telas.JOGO = {
         globais.canos.atualiza();
         globais.chao.atualiza();
         globais.flappyBird.atualiza();
+        globais.placar.atualiza();
     }
 }
+Telas.GAMER_OVER = {
+    desenha(){
+        MessagemGamerOver.desenha();
+    },
+    atualiza(){
+
+    },
+    click(){
+        mudarParaTela(Telas.INICIO);
+    }
+}
+
 function loop(){
 
     telasAtiva.desenha();
